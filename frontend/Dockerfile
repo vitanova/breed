@@ -1,0 +1,14 @@
+# Frontend Dockerfile
+FROM node:16
+
+WORKDIR /app
+COPY package.json ./
+RUN npm install axios
+
+COPY . .
+
+RUN npm run build
+
+CMD ["npm", "start"]
+
+EXPOSE 3000
