@@ -1,74 +1,137 @@
-.App {
-  font-family: Arial, sans-serif;
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
-  background-color: #f4f4f4;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-h1 {
-  text-align: center;
-}
-
-.list-input {
+/* Styling for the container of each row (holding all four sliders in a single row) */
+.gene-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 10px;
+  padding: 5px; /* Reduce padding */
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #fdfdfd;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.05);
+  flex-wrap: nowrap; /* Prevent wrapping */
+  font-size: 1rem; /* Default font size for larger screens */
 }
 
-label {
-  display: block;
+/* Styling for the container of the slider toggle */
+.slider-toggle {
+  display: flex;
+  justify-content: center;
+  flex-grow: 1;
+  margin: 0 3px; /* Reduce margin between slider groups */
+  flex-shrink: 1; /* Allow sliders to shrink to fit */
 }
 
-input {
-  width: 100%;
-  padding: 8px;
-  margin: 5px 0;
-  border: 1px solid #ccc;
+/* Common style for all slider options */
+.slider-option {
+  padding: 4px; /* Reduce padding */
+  cursor: pointer;
   border-radius: 4px;
+  text-align: center;
+  flex-grow: 1;
+  margin: 0 1px; /* Reduce margin between individual options */
+  transition: background-color 0.3s, color 0.3s, font-weight 0.3s;
+  background-color: #e0e0e0; /* Light gray for all options */
+  color: #666; /* Light gray text color */
 }
 
+/* Style for the selected option */
+.selected {
+  background-color: #333; /* Dark black for the selected option */
+  color: white;
+  font-weight: bold;
+}
+
+/* Styling for the buttons */
 button {
-  margin: 5px 5px 5px 0;
-  padding: 10px;
-  background-color: #28a745;
+  padding: 5px 8px; /* Reduce button padding */
+  background-color: #17a2b8;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  margin: 3px; /* Reduce margin */
+  flex-grow: 0;
+  flex-shrink: 1; /* Allow buttons to shrink on small screens */
+  transition: background-color 0.3s;
 }
 
 button:hover {
-  background-color: #218838;
+  background-color: #138496;
 }
 
+/* Styling for remove/add buttons specifically */
+button[type="button"] {
+  background-color: #dc3545;
+}
+
+button[type="button"]:hover {
+  background-color: #c82333;
+}
+
+/* Responsive layout: Ensure everything fits in a row on mobile */
+@media (max-width: 600px) {
+  .gene-row {
+    flex-wrap: nowrap;
+    overflow-x: hidden; /* Disable horizontal scrolling */
+    font-size: 0.7rem; /* Further reduce font size */
+    padding: 3px; /* Reduce padding on small screens */
+  }
+
+  /* Adjust button and slider widths for small screens */
+  .gene-row button, .slider-toggle {
+    flex: 0 0 20%; /* Ensure each element fits within the row */
+    flex-shrink: 1;
+    margin: 0 2px; /* Reduce margin between elements */
+  }
+}
+
+/* Styling for form container */
+form {
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Error message styling */
 .error {
-  color: red;
+  color: #d9534f;
+  margin-top: 10px;
+  font-weight: bold;
 }
 
+/* Styling for result section */
 .result {
   margin-top: 20px;
-  padding: 15px;
+  padding: 20px;
   background-color: #fff;
-  border-radius: 4px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-table {
+.result-summary {
+  padding: 15px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.result-table {
+  margin-top: 10px;
   width: 100%;
   border-collapse: collapse;
-  margin-top: 10px;
 }
 
-table, th, td {
-  border: 1px solid #ddd;
-}
-
-th, td {
-  padding: 8px;
+.result-table th, .result-table td {
+  padding: 10px;
   text-align: left;
+  border: 1px solid #dee2e6;
 }
 
-th {
-  background-color: #f2f2f2;
+.result-table th {
+  background-color: #f1f3f5;
+}
+
+.result-table td {
+  background-color: #fff;
 }

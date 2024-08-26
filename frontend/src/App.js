@@ -7,69 +7,87 @@ const parseFraction = (fraction) => {
   const [numerator, denominator] = fraction.split('/').map(Number);
   return numerator / denominator;
 };
+
+// Reusable SliderToggle component
+const SliderToggle = ({ options, selectedOption, onChange }) => {
+  return (
+    <div className="slider-toggle">
+      {options.map((option, index) => (
+        <span
+          key={index}
+          className={`slider-option ${selectedOption === option ? 'selected' : 'unselected'}`}
+          onClick={() => onChange(option)}
+        >
+          {option}
+        </span>
+      ))}
+    </div>
+  );
+};
+
 function App() {
-  const [parentGenes, setParentGenes] = useState(['m, Aa, Bb, Cc', 'f, Aa, Bb, Cc']);  // Default two parent genes
-  const [targetGenes, setTargetGenes] = useState([]);  // Empty target gene initially
+  const genderOptions = ['m', 'f'];  // Predefined gender options
+  const geneAOptions = ['AA', 'Aa', 'aa'];  // Predefined gene A options
+  const geneBOptions = ['BB', 'Bb', 'bb'];  // Predefined gene B options
+  const geneCOptions = ['CC', 'Cc', 'cc'];  // Predefined gene C options
+
+  // Initial states for parent and target genes
+  const [parentGenes, setParentGenes] = useState([
+    { gender: 'm', genes: ['Aa', 'Bb', 'Cc'] },
+    { gender: 'f', genes: ['AA', 'BB', 'CC'] }
+  ]);
+  const [targetGenes, setTargetGenes] = useState([
+    { gender: 'm', genes: ['AA', 'BB', 'CC'] }
+  ]);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [expanded, setExpanded] = useState({});  // Keeps track of which result is expanded
 
-  const handleParentGeneChange = (index, value) => {
-    const newGenes = [...parentGenes];
-    newGenes[index] = value;
-    setParentGenes(newGenes);
+  // Function to handle toggle changes
+  const handleToggle = (genes, setGenes, index, geneIndex, selectedOption, optionType) => {
+    const newGenes = [...genes];
+    if (optionType === 'gender') {
+      newGenes[index].gender = selectedOption;
+    } else {
+      newGenes[index].genes[geneIndex] = selectedOption;
+    }
+    setGenes(newGenes);
   };
 
-  const handleTargetGeneChange = (index, value) => {
-    const newGenes = [...targetGenes];
-    newGenes[index] = value;
-    setTargetGenes(newGenes);
+  // Function to add a new row for parents or targets
+  const handleAddRow = (setGenes, defaultRow) => {
+    setGenes(prevGenes => [...prevGenes, defaultRow]);
   };
 
-  const handleAddParentGene = () => {
-    setParentGenes([...parentGenes, '']);  // Add an empty parent gene input
+  // Function to remove a row
+  const handleRemoveRow = (setGenes, index) => {
+    setGenes(prevGenes => prevGenes.filter((_, i) => i !== index));
   };
 
-  const handleAddTargetGene = () => {
-    setTargetGenes([...targetGenes, 'f, Aa, Bb, Cc']);  // Add target gene with default value
-  };
-
-  const handleRemoveParentGene = (index) => {
-    const newGenes = parentGenes.filter((_, i) => i !== index);
-    setParentGenes(newGenes);
-  };
-
-  const handleRemoveTargetGene = (index) => {
-    const newGenes = targetGenes.filter((_, i) => i !== index);
-    setTargetGenes(newGenes);
-  };
-
+  // Function to toggle the expansion of result rows
   const toggleExpand = (index) => {
     setExpanded((prevState) => ({
       ...prevState,
-      [index]: !prevState[index]  // Toggle expansion state
+      [index]: !prevState[index]
     }));
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Ensure parentGenes has at least 2 entries, and fill in default placeholders if needed
-    const filledParentGenes = parentGenes.map(gene => gene.trim() !== '' ? gene : 'f, Aa, Bb, Cc');
+    // Format the data for submission
+    const formattedParents = parentGenes.map(item => [item.gender, ...item.genes]);
+    const formattedTargets = targetGenes.map(item => [item.gender, ...item.genes]);
 
-    // Convert each list input (comma-separated string) into an array
-    const parsedParentGenes = filledParentGenes.map(gene => gene.split(',').map(item => item.trim()));
-    const parsedTargetGenes = targetGenes.map(gene => gene.split(',').map(item => item.trim()));
-
-    // Clear previous error and result
     setError('');
     setResult(null);
 
     try {
       // Send the data to the Flask backend
       const response = await axios.post('generate_children', {
-        parents: parsedParentGenes,
-        targets: parsedTargetGenes
+        parents: formattedParents,
+        targets: formattedTargets
       });
 
       // Sort results by 'sum' in descending order
@@ -88,48 +106,94 @@ function App() {
     <div className="App">
       <h1>Gene Pairing and Target Matching</h1>
       <form onSubmit={handleSubmit}>
-        {/* Parent Genes Input */}
+        {/* Parent Genes Section */}
         <h3>Parents' Genes</h3>
-        {parentGenes.map((gene, index) => (
-          <div key={index} className="list-input">
-            <label>Parent Gene {index + 1} (comma separated):</label>
-            <input
-              type="text"
-              value={gene}
-              onChange={(e) => handleParentGeneChange(index, e.target.value)}
-              placeholder={index === 0 ? 'm, Aa, Bb, Cc' : 'f, Aa, Bb, Cc'}
-              required
+        {parentGenes.map((parent, index) => (
+          <div key={index} className="gene-row">
+
+            {/* Gender Slider */}
+            <SliderToggle
+              options={genderOptions}
+              selectedOption={parent.gender}
+              onChange={(option) => handleToggle(parentGenes, setParentGenes, index, null, option, 'gender')}
             />
-            {parentGenes.length > 2 && (
-              <button type="button" onClick={() => handleRemoveParentGene(index)}>
-                Remove Parent
+
+            {/* Gene A Slider */}
+            <SliderToggle
+              options={geneAOptions}
+              selectedOption={parent.genes[0]}
+              onChange={(option) => handleToggle(parentGenes, setParentGenes, index, 0, option, 'gene')}
+            />
+
+            {/* Gene B Slider */}
+            <SliderToggle
+              options={geneBOptions}
+              selectedOption={parent.genes[1]}
+              onChange={(option) => handleToggle(parentGenes, setParentGenes, index, 1, option, 'gene')}
+            />
+
+            {/* Gene C Slider */}
+            <SliderToggle
+              options={geneCOptions}
+              selectedOption={parent.genes[2]}
+              onChange={(option) => handleToggle(parentGenes, setParentGenes, index, 2, option, 'gene')}
+            />
+
+            {/* Remove Parent Button */}
+            {parentGenes.length > 1 && (
+              <button type="button" onClick={() => handleRemoveRow(setParentGenes, index)}>
+                Remove
               </button>
             )}
           </div>
         ))}
-        <button type="button" onClick={handleAddParentGene}>
-          Add Another Parent Gene
+        <button type="button" onClick={() => handleAddRow(setParentGenes, { gender: 'm', genes: ['Aa', 'Bb', 'Cc'] })}>
+          Add Another Parent
         </button>
 
-        {/* Target Genes Input */}
-        <h3>Target Genes for Children</h3>
-        {targetGenes.map((gene, index) => (
-          <div key={index} className="list-input">
-            <label>Target Gene {index + 1} (comma separated):</label>
-            <input
-              type="text"
-              value={gene}
-              onChange={(e) => handleTargetGeneChange(index, e.target.value)}
-              placeholder="f, Aa, Bb, Cc"
-            />
-            <button type="button" onClick={() => handleRemoveTargetGene(index)}>
-              Remove Target
-            </button>
-          </div>
-        ))}
-        <button type="button" onClick={handleAddTargetGene}>
-          Add Another Target Gene
-        </button>
+{/* Target Genes Section */}
+<h3>Target Genes for Children</h3>
+{targetGenes.map((target, index) => (
+  <div key={index} className="gene-row">
+
+    {/* Gender Slider */}
+    <SliderToggle
+      options={genderOptions}
+      selectedOption={target.gender}
+      onChange={(option) => handleToggle(targetGenes, setTargetGenes, index, null, option, 'gender')}
+    />
+
+    {/* Gene A Slider */}
+    <SliderToggle
+      options={geneAOptions}
+      selectedOption={target.genes[0]}
+      onChange={(option) => handleToggle(targetGenes, setTargetGenes, index, 0, option, 'gene')}
+    />
+
+    {/* Gene B Slider */}
+    <SliderToggle
+      options={geneBOptions}
+      selectedOption={target.genes[1]}
+      onChange={(option) => handleToggle(targetGenes, setTargetGenes, index, 1, option, 'gene')}
+    />
+
+    {/* Gene C Slider */}
+    <SliderToggle
+      options={geneCOptions}
+      selectedOption={target.genes[2]}
+      onChange={(option) => handleToggle(targetGenes, setTargetGenes, index, 2, option, 'gene')}
+    />
+
+    {/* Always show Remove Target Button */}
+    <button type="button" onClick={() => handleRemoveRow(setTargetGenes, index)}>
+      Remove
+    </button>
+  </div>
+))}
+<button type="button" onClick={() => handleAddRow(setTargetGenes, { gender: 'm', genes: ['AA', 'BB', 'CC'] })}>
+  Add Another Target
+</button>
+
 
         <button type="submit">Submit</button>
       </form>
@@ -141,23 +205,18 @@ function App() {
         <div className="result">
           <h3>Generated Children Results</h3>
           {result.map((res, index) => {
-            // Skip any empty objects
-            if (!res || !res.childs || Object.keys(res).length === 0) {
-              return null;
-            }
+            if (!res || !res.childs || Object.keys(res).length === 0) return null;
 
             return (
               <div key={index} className="result-summary">
-                {/* Summary row */}
                 <div className="summary-row" onClick={() => toggleExpand(index)}>
                   <h4>
-                    Parents: Father ({res.father ? res.father.join(', ') : 'Unknown'}) and Mother ({res.mother ? res.mother.join(', ') : 'Unknown'})
+                    Parents: Male ({res.father ? res.father.join(', ') : 'Unknown'}) and Female ({res.mother ? res.mother.join(', ') : 'Unknown'})
                   </h4>
                   <p>Sum Probability: {res.sum}</p>
                   <button type="button">{expanded[index] ? 'Hide Details' : 'Show Details'}</button>
                 </div>
 
-                {/* Expanded details (folded by default) */}
                 {expanded[index] && (
                   <div className="result-table">
                     <table>
